@@ -1,43 +1,49 @@
+import { shuffle } from "fast-shuffle";
+import Fuse from "fuse.js";
+
 import data from "./data.json";
+import { PokemonCard } from "./components/PokemonCard";
+
 // DOM TARGETING
-const cardsrow = document.querySelector("#cards-row");
 const inputEl = document.querySelector("input");
+const cardsRowEl = document.querySelector("#cards-row");
 
-// const paragraph = document.createElement("p");
-// paragraph.textContent = "our class";
-// cardsrow.appendChild(paragraph);
+function renderPokemon(list) {
+  console.log(list);
+  cardsRowEl.innerHTML = "";
 
-console.log(cardsrow);
-
-for (let pokObj of data) {
-  const div =document.createElement("div");
-  div.classList.add("col");
-  div.innerHTML =` 
-  <div class="card">
-<img src="${pokObj.image}" class="card-img-top" alt="..." />
-<div class="card-body">
-    <h5 class="card-title">${pokObj.name}</h5>
-    <p class="card-text">
-   ${pokObj.description}
-    </p>
-</div>
-</div>
-</div>
-
-  `;
-  cardsrow.appendChild(div);
+  for (let pokeObj of list) {
+    const pokemon = PokemonCard(
+      pokeObj.image,
+      pokeObj.name,
+      pokeObj.description,
+      pokeObj.link
+    );
+    cardsRowEl.appendChild(pokemon);
+  }
 }
 
-// console.log(data);
-// // to targetthe input element
-// const inputEl = document.querySelector("input");
+function renderFilteredPokemon(term) {
+  const fuse = new Fuse(data, {
+    keys: ["name"],
+  });
 
-// log the targeted element
-// inputEl.focus();
-document.addEventListener("keypress", function (event) {
+  const filtered = fuse.search(term).map((obj) => obj.item);
+
+  renderPokemon(filtered);
+}
+
+// Input element on change
+inputEl.addEventListener("input", (event) => {
+  const currValue = event.target.value.toLowerCase().trim();
+  renderFilteredPokemon(currValue);
+});
+
+// Focus input on slash keypress
+document.addEventListener("keyup", (event) => {
   if (event.key === "/") {
-    // it will not type "/" when we press "/"
-    event.preventDefault();
     inputEl.focus();
   }
 });
+
+renderPokemon(shuffle(data));
